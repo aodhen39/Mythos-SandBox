@@ -53,3 +53,6 @@ TagManager:
   - name: PlatformsDecoration
     uniqueID: 799003875
     locked: 0
+  - name: Player
+    uniqueID: 1227572541
+    locked: 0
