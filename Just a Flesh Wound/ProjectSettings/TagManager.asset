@@ -41,3 +41,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Background
+    uniqueID: 2475997259
+    locked: 0
+  - name: Decoration
+    uniqueID: 2720099279
+    locked: 0
+  - name: Platforms
+    uniqueID: 3302322563
+    locked: 0
+  - name: PlatformsDecoration
+    uniqueID: 799003875
+    locked: 0
