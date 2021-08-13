@@ -29,6 +29,7 @@ public class PlayerController : MonoBehaviour
     public float wallSlideSpeed;
     public float movementForceInAir;
     public float airDragMultiplier = 0.95f;
+    public float variableJumpHeightMultiplier = 0.5f;
     
     // Start is called before the first frame update
     void Start()
@@ -62,6 +63,11 @@ public class PlayerController : MonoBehaviour
         if ( Input.GetButtonDown("Jump") )
         {
             Jump();
+        }
+
+        if (Input.GetButtonUp("Jump"))
+        {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * variableJumpHeightMultiplier);
         }
 
     }
