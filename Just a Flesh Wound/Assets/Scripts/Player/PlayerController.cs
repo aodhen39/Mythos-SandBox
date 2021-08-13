@@ -28,6 +28,7 @@ public class PlayerController : MonoBehaviour
     public float wallCheckDistance;
     public float wallSlideSpeed;
     public float movementForceInAir;
+    public float airDragMultiplier = 0.95f;
     
     // Start is called before the first frame update
     void Start()
@@ -97,6 +98,10 @@ public class PlayerController : MonoBehaviour
             {
                 rb.velocity = new Vector2( movementSpeed * movementInputDirection, rb.velocity.y );
             }
+        }
+        else if(!isGrounded && !isWallSliding && movementInputDirection == 0)
+        {
+            rb.velocity = new Vector2(rb.velocity.x * airDragMultiplier, rb.velocity.y);
         }
 
         if (isWallSliding)
