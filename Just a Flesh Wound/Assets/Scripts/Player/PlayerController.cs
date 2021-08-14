@@ -20,6 +20,7 @@ public class PlayerController : MonoBehaviour
     private bool canJump;
 
     private int amoutJumpsLeft;
+    private int facingDirection = 1;
     public int amountOfJump = 1;
 
     public float jumpForce = 16.0f;
@@ -30,6 +31,11 @@ public class PlayerController : MonoBehaviour
     public float movementForceInAir;
     public float airDragMultiplier = 0.95f;
     public float variableJumpHeightMultiplier = 0.5f;
+    public float wallHopForce;
+    public float wallJumpForce;
+
+    public Vector2 wallHopDirection;
+    public Vector2 wallJumpDirection;
     
     // Start is called before the first frame update
     void Start()
@@ -37,6 +43,8 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         amoutJumpsLeft = amountOfJump;
+        wallHopDirection.Normalize();
+        wallJumpDirection.Normalize();
     }
 
     // Update is called once per frame
@@ -57,39 +65,7 @@ public class PlayerController : MonoBehaviour
         CheckSurrounding();
     }
 
-    private void CheckInput()
-    {
-        movementInputDirection = Input.GetAxisRaw( "Horizontal" );
-        if ( Input.GetButtonDown("Jump") )
-        {
-            Jump();
-        }
 
-        if (Input.GetButtonUp("Jump"))
-        {
-            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * variableJumpHeightMultiplier);
-        }
-
-    }
-
-    private void CheckSurrounding()
-    {
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround);
-
-        isTouchingWall = Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, whatIsGround);
-    }
-
-    private void CheckIfWallSliding()
-    {
-        if(isTouchingWall && !isGrounded && rb.velocity.y < 0)
-        {
-            isWallSliding = true;
-        }
-        else
-        {
-            isWallSliding = false;
-        }
-    }
 
     private void ApplyMovement()
     {
@@ -122,13 +98,60 @@ public class PlayerController : MonoBehaviour
     private void Jump()
     {
 
-        if (canJump)
+        if (canJump && !isWallSliding)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             amoutJumpsLeft--;
         }
+        else if ( (isWallSliding && movementInputDirection == 0 &&  canJump) )// to wall hop
+        {
+            isWallSliding = false;
+            amoutJumpsLeft--;
+            Vector2 forceToAdd = new Vector2(wallHopForce * wallHopDirection.x * -facingDirection, wallHopForce * wallHopDirection.y); 
+            rb.AddForce(forceToAdd, ForceMode2D.Impulse);
+        }
+        else if ( ( isWallSliding || isTouchingWall ) && movementInputDirection !=0 && canJump )
+        {
+            isWallSliding = false;
+            amoutJumpsLeft--;
+            Vector2 forceToAdd = new Vector2(wallJumpForce * wallJumpDirection.x * movementInputDirection, wallJumpForce * wallJumpDirection.y);
+            rb.AddForce(forceToAdd, ForceMode2D.Impulse);
+        }
     }
     #region Check Function
+    private void CheckInput()
+    {
+        movementInputDirection = Input.GetAxisRaw("Horizontal");
+        if (Input.GetButtonDown("Jump"))
+        {
+            Jump();
+        }
+
+        if (Input.GetButtonUp("Jump"))
+        {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * variableJumpHeightMultiplier);
+        }
+
+    }
+
+    private void CheckSurrounding()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround);
+
+        isTouchingWall = Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, whatIsGround);
+    }
+
+    private void CheckIfWallSliding()
+    {
+        if (isTouchingWall && !isGrounded && rb.velocity.y < 0)
+        {
+            isWallSliding = true;
+        }
+        else
+        {
+            isWallSliding = false;
+        }
+    }
     private void CheckMovementDirection()
     {
         if (isFacingRight && movementInputDirection < 0)
@@ -151,7 +174,7 @@ public class PlayerController : MonoBehaviour
     }
     private void CheckIfCanJump()
     {
-        if(isGrounded && rb.velocity.y <= 0)
+        if( (isGrounded && rb.velocity.y <= 0.01f) || isWallSliding)
         {
             amoutJumpsLeft = amountOfJump;
         }
@@ -168,8 +191,15 @@ public class PlayerController : MonoBehaviour
 #endregion
     private void Flip()
     {
-        isFacingRight = !isFacingRight;
-        transform.Rotate(0.0f, 180.0f, 0.0f);
+        if (!isWallSliding)
+        {
+
+            facingDirection *= -1;
+            isFacingRight = !isFacingRight;
+            transform.Rotate(0.0f, 180.0f, 0.0f);
+
+        }
+
     }
 
     private void UpdateAnimations()
