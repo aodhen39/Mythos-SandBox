@@ -27,13 +27,23 @@ public class PlayerController : MonoBehaviour
     private bool isTouchingLedge;
     private bool canClimLedge = false;
     private bool ledgeDetected;
+    private bool isDashing;
 
     private int amoutJumpsLeft;
     private int facingDirection = 1;
     public int amountOfJump = 1;
     private int lastWallJumpDirection;
-
+    
+    //Private float
+    private float jumpTimer;
+    private float turnTimer;
+    private float wallJumpTimer;
     private float movementInputDirection;
+    private float dashTimeLeft;
+    private float lastImageXpos;
+    private float lastDash = -100f;
+
+    //Public float
     public float jumpForce = 16.0f;
     public float groundCheckRadius = 1.0f;
     public float movementSpeed = 10.0f;
@@ -45,11 +55,12 @@ public class PlayerController : MonoBehaviour
     public float wallHopForce;
     public float wallJumpForce;
     public float jumpTimerSet = 0.15f;
-    private float jumpTimer;
-    private float turnTimer;
     public float turnTimerSet = 0.1f ;
-    private float wallJumpTimer;
     public float wallJumpTimerSet = 0.5f;
+    public float dashTime;
+    public float dashSpeed;
+    public float distanceBetweenImages;
+    public float dashCoolDown;
 
     public float ledgeClimbXOffset1 = 0f;
     public float ledgeClimbYOffset1 = 0f;
@@ -82,6 +93,7 @@ public class PlayerController : MonoBehaviour
         CheckIfWallSliding();
         CheckJump();
         CheckLedgeClimb();
+        CheckDash();
     }
 
     private void FixedUpdate()
@@ -205,7 +217,55 @@ public class PlayerController : MonoBehaviour
             rb.velocity = new Vector2( rb.velocity.x, rb.velocity.y * variableJumpHeightMultiplier );
         }
 
+        //Check for dash
+        if( Input.GetButtonUp("Dash"))
+        {
+            if( Time.time > (lastDash + dashCoolDown) )
+            AttemptToDash();
+        }
+
     }
+
+    private void AttemptToDash()
+    {
+        isDashing = true;
+        dashTimeLeft = dashTime;
+        lastDash = Time.time;
+
+        PlayerAfterImagePool.Instance.GetFromPool();
+        lastImageXpos = transform.position.x;
+
+
+    }
+    //Check if we can dash or not + manage dash velocity 
+    private void CheckDash()
+    {
+        if (isDashing)
+        {
+            if(dashTimeLeft > 0)
+            {
+                canMove = false;
+                canFlip = false;
+                //to make the player fall use rb.velocity.y as 2nd argument. If not, use "0"
+                rb.velocity = new Vector2(dashSpeed * facingDirection, 0);
+                dashTimeLeft -= Time.deltaTime;
+
+                if (Mathf.Abs(transform.position.x - lastImageXpos) > distanceBetweenImages)
+                {
+                    PlayerAfterImagePool.Instance.GetFromPool();
+                    lastImageXpos = transform.position.x;
+                }
+            }
+
+            if(dashTimeLeft <= 0 || isTouchingWall)
+            {
+                isDashing = false;
+                canMove = true;
+                canFlip = true;
+            }
+        }
+    }
+
     private void CheckJump()
     {
         if (jumpTimer > 0)
