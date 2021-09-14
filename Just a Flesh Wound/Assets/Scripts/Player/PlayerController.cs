@@ -14,9 +14,9 @@ public class PlayerController : MonoBehaviour
    
     private bool isFacingRight = true;
     private bool isRunning;
-    private bool isGrounded;
+    public bool isGrounded;
     private bool isTouchingWall;
-    private bool isWallSliding;
+    public bool isWallSliding;
     private bool canNormalJump;
     private bool canWallJump;
     private bool isAttemptingToJump;
@@ -46,7 +46,7 @@ public class PlayerController : MonoBehaviour
     //Public float
     public float jumpForce = 16.0f;
     public float groundCheckRadius = 1.0f;
-    public float movementSpeed = 10.0f;
+    public float movementSpeed = 8.0f;
     public float wallCheckDistance;
     public float wallSlideSpeed;
     public float movementForceInAir;
@@ -102,18 +102,20 @@ public class PlayerController : MonoBehaviour
         CheckSurrounding();
     }
 
-
-
     private void ApplyMovement()
     {
-        if( !isGrounded && !isWallSliding && movementInputDirection == 0 )
-        {
-            rb.velocity = new Vector2(rb.velocity.x * airDragMultiplier, rb.velocity.y);
-        }
-        else if( canMove )
-        {
-            rb.velocity = new Vector2( movementSpeed * movementInputDirection, rb.velocity.y );
-        }
+
+        //if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Attack1"))
+        //{
+            if( !isGrounded && !isWallSliding && movementInputDirection == 0)
+            {
+                rb.velocity = new Vector2(rb.velocity.x * airDragMultiplier, rb.velocity.y);
+            }
+            else if( canMove )
+            {
+                rb.velocity = new Vector2( movementSpeed * movementInputDirection, rb.velocity.y );
+            }
+        //}
 
 /*        if( !isGrounded && !isWallSliding && movementInputDirection != 0 )
         {
@@ -388,7 +390,7 @@ public class PlayerController : MonoBehaviour
             Flip();
         }
 
-        if(rb.velocity.x > 0.01f || rb.velocity.x < -0.01f)
+        if( Mathf.Abs(rb.velocity.x) >= 0.01f )
         {
             isRunning = true;
         }
@@ -438,6 +440,16 @@ public class PlayerController : MonoBehaviour
         animator.SetBool("isGrounded", isGrounded);
         animator.SetFloat("yVelocity", rb.velocity.y);
         animator.SetBool("isWallSliding", isWallSliding);
+    }
+
+    public void DisableFlip()
+    {
+        canFlip = false;
+    }
+
+    public void EnableFlip()
+    {
+        canFlip = true;
     }
 
     private void OnDrawGizmos()
